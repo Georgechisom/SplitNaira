@@ -153,6 +153,27 @@ export async function getAllSplits(): Promise<SplitProject[]> {
   return body as SplitProject[];
 }
 
+export interface ListProjectsParams {
+  start?: number;
+  limit?: number;
+}
+
+export async function listProjects(params?: ListProjectsParams): Promise<SplitProject[]> {
+  const url = new URL(`${API_BASE_URL}/splits`);
+  if (params?.start !== undefined) {
+    url.searchParams.set('start', params.start.toString());
+  }
+  if (params?.limit !== undefined) {
+    url.searchParams.set('limit', params.limit.toString());
+  }
+  const response = await fetch(url.toString());
+  const body = (await response.json().catch(() => null)) as unknown;
+  if (!response.ok) {
+    throw new Error(toErrorMessage(response.status, body, "Failed to fetch projects"));
+  }
+  return body as SplitProject[];
+}
+
 export async function getClaimable(projectId: string, address: string): Promise<{ claimed: number; claimable: number }> {
   const response = await fetch(`${API_BASE_URL}/splits/${encodeURIComponent(projectId)}/claimable/${encodeURIComponent(address)}`);
   const body = (await response.json().catch(() => null)) as unknown;

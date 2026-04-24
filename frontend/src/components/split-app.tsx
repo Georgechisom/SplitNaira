@@ -15,6 +15,7 @@ import {
   getClaimable,
   getProjectHistory,
   getSplit,
+  listProjects,
   type ProjectHistoryItem,
 } from "@/lib/api";
 import { isOwner } from "@/lib/address";
@@ -39,14 +40,7 @@ const getInitialCollaborators = (): CollaboratorInput[] => [
   { id: "collab-2", address: "", alias: "", basisPoints: "5000" },
 ];
 
-// Seeded project IDs for Phase 3 Projects list view
-const SEEDED_PROJECT_IDS = [
-  "afrobeats_001",
-  "diaspora_sounds_02",
-  "naija_vibes_03",
-  "west_african_beats_04",
-  "cultural_resonance_05",
-];
+
 
 interface TransactionReceipt {
   hash: string;
@@ -95,6 +89,9 @@ export function SplitApp() {
   const [projectsList, setProjectsList] = useState<SplitProject[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [isLoadingProjectsList, setIsLoadingProjectsList] = useState(false);
+  const [projectsStart, setProjectsStart] = useState(0);
+  const [hasMoreProjects, setHasMoreProjects] = useState(true);
+  const PROJECTS_LIMIT = 10;
 
   // Metadata editing state
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
@@ -900,21 +897,28 @@ export function SplitApp() {
     }
   };
 
-  // Phase 3: Fetch projects list from seeded IDs
-  const onFetchProjectsList = useCallback(async () => {
+  // Phase 3: Fetch projects list from backend with pagination
+  const onFetchProjectsList = useCallback(async (loadMore = false) => {
+    if (isLoadingProjectsList) return;
+    if (!loadMore && projectsList.length > 0) return;
+    
     setIsLoadingProjectsList(true);
     try {
-      const projects: SplitProject[] = [];
-      for (const projectId of SEEDED_PROJECT_IDS) {
-        try {
-          const project = await getSplit(projectId);
-          projects.push(project);
-        } catch (error) {
-          console.error(`Failed to fetch project ${projectId}:`, error);
-        }
+      const start = loadMore ? projectsStart : 0;
+      const projects = await listProjects({ start, limit: PROJECTS_LIMIT });
+      
+      if (loadMore) {
+        setProjectsList(prev => [...prev, ...projects]);
+      } else {
+        setProjectsList(projects);
+        setProjectsStart(0);
       }
-      setProjectsList(projects);
-      if (projects.length === 0) {
+      
+      const newStart = start + projects.length;
+      setProjectsStart(newStart);
+      setHasMoreProjects(projects.length === PROJECTS_LIMIT);
+      
+      if (projects.length === 0 && !loadMore) {
         notify.info("No projects found.");
       }
     } catch (error) {
@@ -923,7 +927,7 @@ export function SplitApp() {
     } finally {
       setIsLoadingProjectsList(false);
     }
-  }, []);
+  }, [isLoadingProjectsList, projectsList.length, projectsStart, listProjects]);
 
   const onFetchDashboardData = async () => {
     setIsLoadingDashboard(true);
@@ -958,8 +962,10 @@ export function SplitApp() {
 
   // Load projects list when switching to Projects tab
   useEffect(() => {
-    if (activeTab === "projects" && projectsList.length === 0 && !isLoadingProjectsList) {
-      void onFetchProjectsList();
+    if (activeTab === "projects") {
+      if (projectsList.length === 0 && !isLoadingProjectsList) {
+        void onFetchProjectsList();
+      }
     } else if (activeTab === "dashboard" && dashboardData.length === 0 && !isLoadingDashboard) {
       void onFetchDashboardData();
     }
