@@ -1,7 +1,9 @@
 ﻿// frontend/src/config/network.ts
 export type Network = "testnet" | "mainnet";
 
-export const NETWORK = (process.env.NEXT_PUBLIC_NETWORK as Network) ?? "testnet";
+export const NETWORK = (
+  (process.env.NEXT_PUBLIC_STELLAR_NETWORK ?? process.env.NEXT_PUBLIC_NETWORK) as Network
+) ?? "testnet";
 
 export const NETWORK_CONFIG = {
   testnet: {
