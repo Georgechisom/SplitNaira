@@ -59,8 +59,16 @@ opsRouter.get("/mainnet-readiness", async (_req, res, next) => {
     renderBackendDeployHookUrl: Boolean(process.env.RENDER_BACKEND_DEPLOY_HOOK_URL?.trim())
   };
 
+  const productionSecrets = {
+    mainnetContractId: Boolean(process.env.MAINNET_CONTRACT_ID?.trim()),
+    renderBackendDeployHookUrl: Boolean(process.env.RENDER_BACKEND_DEPLOY_HOOK_URL?.trim())
+  };
+
+  const isProduction = process.env.NODE_ENV === "production";
+  const productionReady = !isProduction || Object.values(productionSecrets).every(Boolean);
+
   const deployComponent: MainnetReadinessResponse["components"]["deploy"] = {
-    ok: true,
+    ok: productionReady,
     message: "production_config_audit",
     productionSecrets,
     contractIdMatch: process.env.MAINNET_CONTRACT_ID && process.env.CONTRACT_ID
