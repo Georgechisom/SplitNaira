@@ -1,7 +1,7 @@
 ﻿# Frontend Mainnet Launch Runbook
 
 ## Pre-launch Checklist
-- [ ] `NEXT_PUBLIC_NETWORK=mainnet` set in production environment
+- [ ] `NEXT_PUBLIC_STELLAR_NETWORK=mainnet` set in production environment
 - [ ] `NEXT_PUBLIC_CONTRACT_ID` points to verified mainnet contract
 - [ ] No hardcoded testnet references remain in source code
 - [ ] All wallet error messages tested with Freighter on mainnet
@@ -10,7 +10,7 @@
 ## Environment Variables (Production)
 | Variable | Description |
 |---|---|
-| `NEXT_PUBLIC_NETWORK` | Set to `mainnet` for production |
+| `NEXT_PUBLIC_STELLAR_NETWORK` | Set to `mainnet` for production |
 | `NEXT_PUBLIC_CONTRACT_ID` | Verified mainnet Soroban contract ID |
 | `NEXT_PUBLIC_STELLAR_RPC_URL` | Mainnet RPC endpoint |
 | `NEXT_PUBLIC_HORIZON_URL` | Mainnet Horizon URL |
