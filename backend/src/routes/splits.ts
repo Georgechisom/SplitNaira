@@ -69,6 +69,7 @@ import {
   buildWithdrawUnallocatedUnsignedXdr,
   buildUnsignedContractCall
 } from "../services/splits.service.js";
+import { logger } from "../services/logger.js";
 
 // Re-export all schemas, contract helpers, and services for backwards compatibility
 export {
@@ -148,7 +149,17 @@ function sendRpcError(res: Response, requestId: string, message: string, status 
 
 export const splitsRouter = Router();
 
-
+function logPaymentsAdminAction(
+  res: Response,
+  action: string,
+  details: Record<string, unknown>
+) {
+  logger.info("Payments admin action prepared", {
+    action,
+    requestId: res.locals.requestId,
+    ...details
+  });
+}
 
 splitsRouter.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -533,6 +544,10 @@ splitsRouter.post("/admin/allow-token", async (req: Request, res: Response, next
 
     try {
       const result = await buildAllowTokenUnsignedXdr(parsed.data);
+      logPaymentsAdminAction(res, "allow_token", {
+        admin: parsed.data.admin,
+        token: parsed.data.token
+      });
       return res.status(200).json(result);
     } catch (error) {
       if (error instanceof RequestValidationError) {
@@ -555,6 +570,10 @@ splitsRouter.post("/admin/disallow-token", async (req: Request, res: Response, n
 
     try {
       const result = await buildDisallowTokenUnsignedXdr(parsed.data);
+      logPaymentsAdminAction(res, "disallow_token", {
+        admin: parsed.data.admin,
+        token: parsed.data.token
+      });
       return res.status(200).json(result);
     } catch (error) {
       if (error instanceof RequestValidationError) {
@@ -577,6 +596,9 @@ splitsRouter.post("/admin/pause-distributions", async (req: Request, res: Respon
 
     try {
       const result = await buildPauseDistributionsUnsignedXdr(parsed.data);
+      logPaymentsAdminAction(res, "pause_distributions", {
+        admin: parsed.data.admin
+      });
       return res.status(200).json(result);
     } catch (error) {
       if (error instanceof RequestValidationError) {
@@ -599,6 +621,9 @@ splitsRouter.post("/admin/unpause-distributions", async (req: Request, res: Resp
 
     try {
       const result = await buildUnpauseDistributionsUnsignedXdr(parsed.data);
+      logPaymentsAdminAction(res, "unpause_distributions", {
+        admin: parsed.data.admin
+      });
       return res.status(200).json(result);
     } catch (error) {
       if (error instanceof RequestValidationError) {
@@ -820,6 +845,12 @@ splitsRouter.post("/admin/withdraw-unallocated", async (req: Request, res: Respo
 
     try {
       const result = await buildWithdrawUnallocatedUnsignedXdr(parsed.data);
+      logPaymentsAdminAction(res, "withdraw_unallocated", {
+        admin: parsed.data.admin,
+        token: parsed.data.token,
+        to: parsed.data.to,
+        amount: parsed.data.amount
+      });
       return res.status(200).json(result);
     } catch (error) {
       if (error instanceof RequestValidationError) {
