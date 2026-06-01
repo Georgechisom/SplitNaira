@@ -2,6 +2,22 @@ import { z } from "zod";
 import { CollaboratorSchema } from "../generated/contract-types.js";
 import { Address } from "@stellar/stellar-sdk";
 
+// Security: Safe text validator - prevents XSS by restricting to safe character ranges
+// Allows: alphanumeric, spaces, hyphens, underscores, periods, commas, ampersands
+const SAFE_TEXT_REGEX = /^[a-zA-Z0-9\s\-_.,'&()]*$/;
+const validateSafeText = (value: string) => {
+  if (!SAFE_TEXT_REGEX.test(value)) {
+    return false;
+  }
+  // Additional check: ensure no HTML/JS patterns
+  const lowerValue = value.toLowerCase();
+  const dangerousPatterns = [
+    '<script', 'onclick', 'onerror', 'onload', 'javascript:', 'on[a-z]+=',
+    'eval(', 'expression(', 'vbscript:', 'data:text/html'
+  ];
+  return !dangerousPatterns.some(pattern => lowerValue.includes(pattern));
+};
+
 // Strict Stellar address validator used across schemas
 export const stellarAddressSchema = z
   .string()
@@ -16,6 +32,11 @@ export const stellarAddressSchema = z
       });
     }
   });
+
+// Safe text field validator - used for titles, types, and aliases
+export const safeTextField = z
+  .string()
+  .refine(validateSafeText, "contains unsafe characters or patterns");
 
 export const collaboratorSchema = CollaboratorSchema.omit({ basis_points: true }).extend({
   address: stellarAddressSchema,
