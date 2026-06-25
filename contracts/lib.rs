@@ -658,6 +658,11 @@ impl SplitNairaContract {
         }
 
         for project_id in project_ids.iter() {
+
+            if is_paused(&env) {
+                panic_with_error!(&env, SplitError::DistributionsPaused);
+            }
+            
             match Self::distribute(env.clone(), project_id) {
                 Ok(_) => {}
                 Err(SplitError::DistributionsPaused) => {
@@ -769,6 +774,7 @@ impl SplitNairaContract {
             project_id: project_id.clone(),
             claimer: claimer.clone(),
             amount,
+            distribution_round: project.distribution_round, // Add this line
         }
         .publish(&env);
 
