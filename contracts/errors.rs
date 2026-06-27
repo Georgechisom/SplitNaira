@@ -1,4 +1,4 @@
-use soroban_sdk::contracterror;
+﻿use soroban_sdk::contracterror;
 
 /// Errors returned by the SplitNaira smart contract.
 ///
